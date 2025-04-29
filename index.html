@@ -1,14 +1,4 @@
 <!DOCTYPE html>
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>Untitled</title>
-  <link rel="stylesheet" href="./style.css">
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -16,9 +6,9 @@
   <title>Oregon Trail: The Board Game</title>
   <style>
     :root {
-      --primary-color: #8B4513; /* saddlebrown */
-      --secondary-color: #556B2F; /* darkolivegreen */
-      --accent-color: #CD853F; /* peru */
+      --primary-color: #8B4513;
+      --secondary-color: #556B2F;
+      --accent-color: #CD853F;
       --light-color: #f6ecd4;
       --dark-color: #333;
     }
@@ -60,14 +50,6 @@
       margin-bottom: 20px;
     }
 
-    .game-area {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
     #board {
       position: relative;
       width: 1152px;
@@ -77,6 +59,7 @@
       border: 8px ridge var(--accent-color);
       border-radius: 5px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      margin: 0 auto;
     }
 
     .space {
@@ -212,6 +195,36 @@
       margin: 10px 0;
     }
 
+    #game-directions {
+      background-color: rgba(255, 255, 255, 0.85);
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 800px;
+      border-left: 5px solid var(--secondary-color);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    #game-directions h2 {
+      color: var(--primary-color);
+      margin-top: 0;
+      border-bottom: 1px dashed var(--accent-color);
+      padding-bottom: 8px;
+    }
+    
+    #game-directions ol {
+      padding-left: 25px;
+    }
+    
+    #game-directions li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    
+    #game-directions strong {
+      color: var(--secondary-color);
+    }
+
     @media (max-width: 1200px) {
       #board {
         width: 100%;
@@ -231,12 +244,23 @@
     <h1>Oregon Trail: The Board Game</h1>
     <p class="subtitle">Journey from Independence, Missouri to the Willamette Valley, Oregon</p>
     
+    <div id="game-directions">
+      <h2>How to Play</h2>
+      <ol>
+        <li><strong>Roll the dice</strong> each turn to move your wagon forward (1-3 spaces)</li>
+        <li>You must complete the journey in <strong>at least 8 turns</strong> to win</li>
+        <li>Manage your <strong>food supply</strong> (start with 100 lbs)</li>
+        <li>Watch your <strong>health</strong> - some events can damage it</li>
+        <li>Reach <strong>Oregon (space 25)</strong> before running out of resources</li>
+        <li>Random events will help or hinder your journey</li>
+      </ol>
+      <p><em>Tip: Bad weather and illnesses cost turns - plan your supplies carefully!</em></p>
+    </div>
+
     <div class="game-area">
       <div id="board">
-        <!-- Player token -->
         <div id="player-token"></div>
         
-        <!-- Numbered spaces positioned like in your image -->
         <div class="space" style="top: 630px; left: 960px;">1</div>
         <div class="space" style="top: 590px; left: 910px;">2</div>
         <div class="space" style="top: 590px; left: 860px;">3</div>
@@ -290,8 +314,8 @@
             <div class="stat-value" id="space-stat">0/25</div>
           </div>
           <div class="stat-item">
-            <div>Days Traveled</div>
-            <div class="stat-value" id="days-stat">0</div>
+            <div>Turns Taken</div>
+            <div class="stat-value" id="turns-stat">0 (min 8)</div>
           </div>
         </div>
       </div>
@@ -309,6 +333,7 @@
     // game.js
     let currentPlayerPosition = 0;
     const totalSpaces = 25;
+    const MIN_TURNS_TO_WIN = 8;
     const spacePositions = [
       { top: 630, left: 960 }, { top: 590, left: 910 }, { top: 590, left: 860 },
       { top: 550, left: 810 }, { top: 510, left: 760 }, { top: 510, left: 710 },
@@ -331,13 +356,28 @@
       { title: "Native Guide", description: "A native guide helps you find a shortcut. Move ahead 3 spaces.", effect: "move", amount: 3, icon: "🏹" },
       { title: "Wrong Turn", description: "You took a wrong path. Move back 2 spaces.", effect: "move", amount: -2, icon: "🔄" },
       { title: "Abandoned Supplies", description: "You found abandoned supplies. Gain 15 lbs of food.", effect: "addFood", amount: 15, icon: "🎁" },
-      { title: "Snake Bite", description: "A rattlesnake bites your ox. Lose 10 health.", effect: "removeHealth", amount: 10, icon: "🐍" }
+      { title: "Snake Bite", description: "A rattlesnake bites your ox. Lose 10 health.", effect: "removeHealth", amount: 10, icon: "🐍" },
+      { title: "Oxen Injury", description: "Your oxen are injured. Lose 15 health and 10 food.", effect: "multi", effects: [
+        {type: "removeHealth", amount: 15},
+        {type: "removeFood", amount: 10}
+      ], icon: "🐂" },
+      { title: "Dysentery", description: "A family member contracts dysentery! Lose 30 health.", effect: "removeHealth", amount: 30, icon: "🤢" },
+      { title: "Friendly Natives", description: "Natives share food with you. Gain 40 food.", effect: "addFood", amount: 40, icon: "👳" },
+      { title: "Gold Rush!", description: "You find gold! Gain 50 food and move ahead 1 space.", effect: "multi", effects: [
+        {type: "addFood", amount: 50},
+        {type: "move", amount: 1}
+      ], icon: "💰" },
+      { title: "Wagon Fire", description: "Your wagon catches fire! Lose 20 food and 15 health.", effect: "multi", effects: [
+        {type: "removeFood", amount: 20},
+        {type: "removeHealth", amount: 15}
+      ], icon: "🔥" },
+      { title: "Miraculous Healing", description: "A traveling doctor helps your party. Gain 30 health.", effect: "addHealth", amount: 30, icon: "💊" }
     ];
 
     let playerStats = {
       food: 100,
       health: 100,
-      days: 0,
+      turns: 0,
       skipTurns: 0
     };
 
@@ -346,29 +386,35 @@
     function rollDice() {
       if (playerStats.skipTurns > 0) {
         playerStats.skipTurns--;
-        playerStats.days++;
+        playerStats.turns++;
         updateStats();
-        document.getElementById('status').textContent = `Resting today (${playerStats.skipTurns} days left). Cannot move this turn.`;
+        document.getElementById('status').textContent = `Resting this turn (${playerStats.skipTurns} turns left). Cannot move.`;
         return;
       }
 
-      const diceRoll = Math.floor(Math.random() * 6) + 1; // 1-6
+      const diceRoll = Math.floor(Math.random() * 3) + 1; // Now 1-3
       document.getElementById('dice-result').textContent = diceFaces[diceRoll-1];
       document.getElementById('dice-result-popup').textContent = diceFaces[diceRoll-1];
       
       movePlayer(diceRoll);
-      playerStats.days++;
+      playerStats.turns++;
       updateStats();
     }
 
     function movePlayer(spaces) {
-      const oldPosition = currentPlayerPosition;
       currentPlayerPosition += spaces;
       
       if (currentPlayerPosition >= totalSpaces) {
-        currentPlayerPosition = totalSpaces;
-        updatePlayerToken();
-        showPopup("Congratulations! You've reached Oregon and won the game!", "🎉 Victory! 🎉");
+        if (playerStats.turns >= MIN_TURNS_TO_WIN) {
+          currentPlayerPosition = totalSpaces;
+          updatePlayerToken();
+          showPopup(`Congratulations! You've reached Oregon in ${playerStats.turns} turns and won the game!`, "🎉 Victory! 🎉");
+        } else {
+          const turnsNeeded = MIN_TURNS_TO_WIN - playerStats.turns;
+          currentPlayerPosition = totalSpaces - 1;
+          updatePlayerToken();
+          showPopup(`You arrived too quickly! Need ${turnsNeeded} more turn(s) before you can settle.`, "🚨 Too Fast!");
+        }
         return;
       }
       
@@ -377,8 +423,8 @@
       document.getElementById('status').textContent = `You rolled a ${spaces}! Traveled to space ${currentPlayerPosition}.`;
       updatePlayerToken();
       
-      // Trigger event card when landing on a space
-      if (spaces > 0) {
+      // 70% chance of event when landing on a space
+      if (spaces > 0 && Math.random() < 0.7) {
         setTimeout(triggerEvent, 500);
       }
     }
@@ -394,38 +440,48 @@
     }
 
     function triggerEvent() {
-      // Not all spaces have events (about 30% chance)
-      if (Math.random() > 0.7) {
-        const randomCardIndex = Math.floor(Math.random() * eventCards.length);
-        const card = eventCards[randomCardIndex];
-        
-        let message = `${card.icon || ""} ${card.title}: ${card.description}`;
-        
-        switch(card.effect) {
-          case "skipTurn":
-            playerStats.skipTurns = card.amount || 1;
-            break;
-          case "addFood":
-            playerStats.food += card.amount;
-            message += ` You now have ${playerStats.food} lbs of food.`;
-            break;
-          case "removeFood":
-            playerStats.food = Math.max(0, playerStats.food - card.amount);
-            message += ` You now have ${playerStats.food} lbs of food.`;
-            break;
-          case "move":
-            movePlayer(card.amount);
-            message += ` Moved to space ${currentPlayerPosition}.`;
-            break;
-          case "removeHealth":
-            playerStats.health = Math.max(0, playerStats.health - card.amount);
-            message += ` Your health is now ${playerStats.health}%.`;
-            break;
-        }
-        
-        showPopup(message, card.title);
-        updateStats();
-        checkGameOver();
+      const randomCardIndex = Math.floor(Math.random() * eventCards.length);
+      const card = eventCards[randomCardIndex];
+      
+      let message = `${card.icon || ""} ${card.title}: ${card.description}`;
+      
+      if (card.effect === "multi") {
+        card.effects.forEach(effect => {
+          applyEffect(effect, message);
+        });
+      } else {
+        applyEffect({type: card.effect, amount: card.amount}, message);
+      }
+      
+      showPopup(message, card.title);
+      checkGameOver();
+    }
+
+    function applyEffect(effect, message) {
+      switch(effect.type) {
+        case "skipTurn":
+          playerStats.skipTurns = effect.amount || 1;
+          break;
+        case "addFood":
+          playerStats.food += effect.amount;
+          message += ` You now have ${playerStats.food} lbs of food.`;
+          break;
+        case "removeFood":
+          playerStats.food = Math.max(0, playerStats.food - effect.amount);
+          message += ` You now have ${playerStats.food} lbs of food.`;
+          break;
+        case "addHealth":
+          playerStats.health = Math.min(100, playerStats.health + effect.amount);
+          message += ` Your health is now ${playerStats.health}%.`;
+          break;
+        case "removeHealth":
+          playerStats.health = Math.max(0, playerStats.health - effect.amount);
+          message += ` Your health is now ${playerStats.health}%.`;
+          break;
+        case "move":
+          movePlayer(effect.amount);
+          message += ` Moved to space ${currentPlayerPosition}.`;
+          break;
       }
     }
 
@@ -450,7 +506,7 @@
     function updateStats() {
       document.getElementById('food-stat').textContent = `${playerStats.food} lbs`;
       document.getElementById('health-stat').textContent = `${playerStats.health}%`;
-      document.getElementById('days-stat').textContent = playerStats.days;
+      document.getElementById('turns-stat').textContent = `${playerStats.turns} (min ${MIN_TURNS_TO_WIN})`;
     }
 
     function restartGame() {
@@ -458,7 +514,7 @@
       playerStats = {
         food: 100,
         health: 100,
-        days: 0,
+        turns: 0,
         skipTurns: 0
       };
       updateStats();
@@ -471,10 +527,5 @@
     updateStats();
     updatePlayerToken();
   </script>
-</body>
-</html>
-<!-- partial -->
-  <script  src="./script.js"></script>
-
 </body>
 </html>
