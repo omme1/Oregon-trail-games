@@ -26,7 +26,7 @@ function rollDice() {
         return;
     }
 
-    const diceRoll = Math.floor(Math.random() * 6) + 1; // 1-6
+    const diceRoll = Math.floor(Math.random() * 3) + 1; // 1-6
     movePlayer(diceRoll);
     playerStats.turns++;
     updateStatus();
